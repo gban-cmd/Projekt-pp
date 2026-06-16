@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Europe Weather Demo</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<style>
+body { font-family: Arial, sans-serif; margin: 0; background:  #263545 }
+footer {font-family:Arial, sans-serif; padding: 1px; position: fixed;width:100%; bottom: 0; background:#1a2430}
+header {font-family:Arial, sans-serif; padding : 1px; top: 0; background: #1e2a38}
+p {text-align: center; color: white ;}
+h2 { text-align: center; color:white}
+h3 {color:white}
+#map { width: 600px; height: 420px; margin: 20px auto; border-radius: 8px; border: 1px solid #ccc; }
+#info { width: 320px; margin: 5px auto; padding: 10px; background: rgb(5, 46, 70); border-radius: 8px; border: 1px solid #dddddd; display: none; }
+.marker {width: 12px; height: 12px; background: red; border-radius: 50%; }
+.row { color: white; margin: 6px 0; }
+
+
+</style>
+</head>
+<body>
+<header>
+<h2>Svjetsko vrijeme</h2>
+</header>
+
+<div id="map"></div>
+<div id="info"></div>
+ 
+<script>
+const map = L.map('map').setView([20, 10], 2);
+ 
+L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+  subdomains: 'abcd',
+  maxZoom: 19
+}).addTo(map);
+ 
+const cities = [
+  { name: "London", lat: 51.5, lng: -0.1 },
+  { name: "Paris", lat: 48.9, lng: 2.3 },
+  { name: "Berlin", lat: 52.5, lng: 13.4 },
+  { name: "Zagreb", lat: 45.8, lng: 16.0 },
+  { name: "Rome", lat: 41.9, lng: 12.5 },
+  { name: "Warsaw", lat: 52.2, lng: 21.0 },
+  { name: "New York", lat: 40.7, lng: -74.0 },
+  { name: "Tokyo", lat: 35.7, lng: 139.7 },
+  { name: "Sydney", lat: -33.9, lng: 151.2 },
+  { name: "Cairo", lat: 30.0, lng: 31.2 },
+  { name: "Sao Paulo", lat: -23.5, lng: -46.6 },
+  { name: "Mumbai", lat: 19.1, lng: 72.9 }
+];
+ 
+const marker = L.divIcon({
+  className: '',
+  html: '<div class="marker"></div>'
+});
+ 
+cities.forEach(city => {
+  L.marker([city.lat, city.lng], { icon: marker })
+    .addTo(map)
+    .on('click', async () => {
+      const info = document.getElementById('info');
+      info.style.display = 'block';
+     
+      try {
+        const res = await fetch(`/weather/${city.name}`);
+        const data = await res.json();
+        info.innerHTML = `
+          <h3>${city.name}</h3>
+          <div class="row">Temperatura: ${data.temperature_c} °C</div>
+          <div class="row">Vlaga: ${data.humidity}%</div>
+          <div class="row">Vjetar: ${data.wind_kmph} km/h</div>
+          <div class="row">Opis: ${data.description}</div>
+          <div class="row">Smjer vjetra: ${data.wind_dir}</div>
+          <div class="row">Vidljivost: ${data.visibility_km} km</div>
+        `;
+      } catch (e) {
+        info.innerHTML = `<p>Greška pri dohvatu podataka.</p>`;
+      }
+    });
+});
+</script>
+<footer>
+  <p> Podaci su dohvaćeni sa https://wttr.in/zagreb?format=j1</p>
+</footer>
+
+</body>
+</html>
